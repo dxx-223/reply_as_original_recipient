@@ -26,10 +26,11 @@ var ReplyAsOriginalRecipient = {
       return;
 
     /* Get patterns preference (modified by Samuel Kirschner, according to the comment on https://blog.qiqitori.com/?p=194 ) */
-    var patterns = Components.classes["@mozilla.org/preferences-service;1"]
-    	.getService(Components.interfaces.nsIPrefService)
-    	.getBranch("extensions.replyasoriginalrecipient.")
-    	.getCharPref("patterns"); // default is "*+*"
+    var ourPrefs = Components.classes["@mozilla.org/preferences-service;1"]
+        .getService(Components.interfaces.nsIPrefService)
+        .getBranch("extensions.replyasoriginalrecipient.");
+    var patterns = ourPrefs.getCharPref("patterns"); // default is "*+*"
+    var stripName = ourPrefs.getBoolPref("stripName"); // default is true
     var mimeConvert = Components.classes["@mozilla.org/messenger/mimeconverter;1"]
         .getService(Components.interfaces.nsIMimeConverter);
     /* transform the simple patterns from the preference into a regular expression */
@@ -55,11 +56,10 @@ var ReplyAsOriginalRecipient = {
 	}
 	if (originalRecipient === null) return; // abort in case there was no match
 
-	// Remove any name part from the matched original recipient
-	var match = originalRecipient.match(/< *(.+?) *>/);
-	if (match) {
-		originalRecipient = match[1];
-	}
+	// If 'name' part of email is simply an address, then simplify
+	// e.g. email@domain <email@domain> becomes simply: email@domain
+	var emailNameMatch = originalRecipient.match(/.+@.+ < *(.+?) *>/);
+	originalRecipient = emailNameMatch ? emailNameMatch[1] : originalRecipient;
 
     /* Adapted from mail/components/compose/content/MsgComposeCommands.js */
     var customizeMenuitem = document.getElementById("cmd_customizeFromAddress");
@@ -69,10 +69,12 @@ var ReplyAsOriginalRecipient = {
     identityElement.removeAttribute("type");
     identityElement.editable = true;
     identityElement.focus(); // if we don't do this, we won't be able to send off our email. sounds odd but it's true
-	if (identityElement.value.match(/<.+?>/)) {
+	if (stripName && identityElement.value.match(/<.+?>/)) {
+		// Remove any name part from the matched original recipient
+		var match = originalRecipient.match(/< *(.+?) *>/);
+		originalRecipient = match ? match[1] : originalRecipient;
 		identityElement.value = identityElement.value.replace(/<.+?>/, "<" + originalRecipient + ">");
-	}
-	else {
+	} else {
 		identityElement.value = originalRecipient;
 	}
     identityElement.select();
