@@ -2,15 +2,15 @@
   "manifest_version": 2,
   "applications": {
     "gecko": {
-      "id": "replyasoriginalrecipient@qiqitori.com",
+      "id": "replyasoriginalrecipient@catbref",
       "strict_min_version": "68.0"
     }
   },
   "name": "Reply As Original Recipient",
   "description": "Reply with the From: field set to the To: field from the original email.",
-  "version": "1.5",
-  "author": "Qiqitori",
-  "homepage_url": "http://blog.qiqitori.com/?p=194",
+  "version": "1.5.1",
+  "author": "Qiqitori +catbref",
+  "homepage_url": "https://github.com/catbref/reply_as_original_recipient",
   "legacy": {
     "type": "xul"
   }
